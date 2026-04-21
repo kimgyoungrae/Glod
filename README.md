@@ -17,7 +17,7 @@ Glød is an interactive, Arduino-powered minimalist lamp built for CSE 493F (Phy
 * Piezo Buzzer
 * Tactile Push Button
 * DIY Lo-Fi Rotary Potentiometer (Variable Resistor)
-* Breadboard (Small) & 10k Ohm Resistors
+* Breadboard (Small) & Resistors
 * Jumper Cables & Breadboarding Wires
 
 **DIY Enclosure & Potentiometer Materials:**
