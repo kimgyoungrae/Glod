@@ -19,7 +19,7 @@ const int RGB_GREEN_PIN = 5;
 const int RGB_BLUE_PIN = 9;
 const int BUTTON_PIN = 2; 
 const int POT_PIN = A0; 
-const int PHOTOCELL_PIN = A1; 
+const int PHOTO_PIN = A1; 
 const int PIEZO_PIN = 12; 
 
 int buttonState = LOW;             
@@ -30,7 +30,7 @@ const boolean COMMON_ANODE = false;
 
 
 // Modes:
-// 0 is for Photocell RGB (Inversely Proportional)
+// 0 is for Photoresistor RGB (Inversely Proportional)
 // 1 is for Slider RGB (Adjustable Crossfading)
 // 2 is for Reading Light (Soft White)
 int currentMode = 0; 
@@ -72,7 +72,7 @@ void loop() {
         // Cycle through various modes (delay is so that chime plays the full duration):
         if (currentMode == 0) {
           tone(PIEZO_PIN, 1000, 100); delay(100);
-          Serial.println("Mode Changed: Photocell RGB (Inversely Proportional)");
+          Serial.println("Mode Changed: Photoresistor RGB (Inversely Proportional)");
         } else if (currentMode == 1) {
           tone(PIEZO_PIN, 1500, 100); delay(100);
           Serial.println("Mode Changed: Slider RGB (Adjustable Crossfading)");
@@ -86,9 +86,9 @@ void loop() {
   lastButtonState = reading; 
 
   if (currentMode == 0) {
-    // Mode 0: Use Photocell
-    int lightVal = analogRead(PHOTOCELL_PIN);
-    Serial.print("Photocell Raw: ");
+    // Mode 0: Use Photoresistor
+    int lightVal = analogRead(PHOTO_PIN);
+    Serial.print("Photoresistor Raw: ");
     Serial.print(lightVal);
     // Maps inversely proportional as per spec
     brightness = map(lightVal, 200, 900, 255, 0); 
