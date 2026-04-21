@@ -13,7 +13,7 @@
 
 #include "src/RGBConverter/RGBConverter.h"
 
-
+// Pin Definitions
 const int RGB_RED_PIN = 6;
 const int RGB_GREEN_PIN = 5;
 const int RGB_BLUE_PIN = 9;
@@ -22,6 +22,7 @@ const int POT_PIN = A0;
 const int PHOTO_PIN = A1; 
 const int PIEZO_PIN = 12; 
 
+// Variables for Button Debouncing
 int buttonState = LOW;             
 int lastButtonState = LOW;         
 unsigned long lastDebounceTime = 0;  
@@ -29,42 +30,54 @@ unsigned long debounceDelay = 50;
 const boolean COMMON_ANODE = false; 
 
 
-// Modes:
-// 0 is for Photoresistor RGB (Inversely Proportional)
-// 1 is for Slider RGB (Adjustable Crossfading)
-// 2 is for Reading Light (Soft White)
+// Modes or States:
+// 0: Photoresistor RGB Crossfade (Brightness reacts inversely to room light)
+// 1: Slider RGB Crossfade (Brightness controlled manually via slider)
+// 2: Reading Light (Static soft white, brightness controlled via slider)
 int currentMode = 0; 
 
-float _hue = 0; 
-float _step = 0.001f;
+float _hue = 0; // color position on color wheel (ranges from 0.0 to 1.0)
+float _step = 0.001f; // crossfading speed
 RGBConverter _rgbConverter;
 int brightness = 255; 
 
 void setup() {
+  // Initialize RGB LED pins as output
   pinMode(RGB_RED_PIN, OUTPUT);
   pinMode(RGB_GREEN_PIN, OUTPUT);
   pinMode(RGB_BLUE_PIN, OUTPUT);
+
+  // Initialize button as input
   pinMode(BUTTON_PIN, INPUT); 
   
+  // Initialize Piezo buzzer as output
   pinMode(PIEZO_PIN, OUTPUT); 
   
+  // Start serial communication
   Serial.begin(9600);   
 }
 
 void loop() {
   int reading = digitalRead(BUTTON_PIN);
 
+  // If button state has changed due to bounce or press, reset timer.
   if (reading != lastButtonState) {
     lastDebounceTime = millis(); 
   }
 
+  // If state has been longer than the debounce delay
   if ((millis() - lastDebounceTime) > debounceDelay) {
+    // Check to see if it's a new state
     if (reading != buttonState) {
       buttonState = reading; 
 
+      // Trigger mode change when button goes LOW to HIGH (is pressed down)
       if (buttonState == HIGH) {
         
+      
         currentMode++; 
+
+        // Ensures that state transitions loop circularly
         if (currentMode > 2) {
           currentMode = 0; 
         }
@@ -100,30 +113,39 @@ void loop() {
     int potVal = analogRead(POT_PIN);
     Serial.print("Slider Raw: ");
     Serial.print(potVal);
+
+    // Map proportionally for sliding pot.
     brightness = map(potVal, 200, 850, 0, 255);
     Serial.print("  |  Mapped Brightness: ");
     Serial.println(brightness);
   }
   
+  // Limit the range of brightness from 0 to 255.
   brightness = constrain(brightness, 0, 255);
 
   if (currentMode == 2) {
     // Mode 2: Static Soft White
-    setColor(255, 180, 80); 
+    setColor(255, 214, 170); 
     
   } else {
     // Mode 0 and 1: Crossfading Colors
-    byte rgb[3];
+    byte rgb[3]; // Holds the RGB values.
+
+    // Converts HSL to RGB, applies the calculated colors, increments hue shift, and resets.
+
     _rgbConverter.hslToRgb(_hue, 1, 0.5, rgb);
     setColor(rgb[0], rgb[1], rgb[2]); 
     
     _hue += _step;
     if(_hue > 1.0) { _hue = 0; }
+
   }
     
+  // Delay is to make sure readings are stable.
   delay(10); 
 }
 
+// Adapted from Dr. Froehlich's code.
 void setColor(int red, int green, int blue) {
   if(COMMON_ANODE == true){
     red = 255 - red;
@@ -131,6 +153,9 @@ void setColor(int red, int green, int blue) {
     blue = 255 - blue;
   }
   
+
+  // Similar as before, but scale raw color values by current brightness 
+  // percentage and divide by 255 to adapt brightness.
   int finalRed = ((long)red * brightness) / 255;
   int finalGreen = ((long)green * brightness) / 255;
   int finalBlue = ((long)blue * brightness) / 255;
